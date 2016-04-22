@@ -1,0 +1,10 @@
+
+tarmux
+======
+
+The tar multiplexer.
+
+Use the tar multiplexer to stream into multivolume tar files, and use the demultiplexer
+to extract the stream back into the constituent parts.
+
+

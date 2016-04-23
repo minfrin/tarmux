@@ -7,6 +7,7 @@
 %define release   1
 %define group     Applications/System
 %define source    %{name}-%{version}.tar.bz2
+%deifne url       https://github.com/minfrin/tarmux
 %define packager  Graham Leggett
 %define buildroot %{_builddir}/%{name}-root
 
@@ -18,6 +19,7 @@ Summary:   %{summary}
 License:  %{license}
 Group:     %{group}
 Source:   %{source}
+URL:	  %{url}
 Prefix:    %{_prefix}
 Buildroot: %{buildroot}
 BuildRequires: libarchive-devel >= 3

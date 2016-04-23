@@ -7,7 +7,7 @@
 %define release   1
 %define group     Applications/System
 %define source    %{name}-%{version}.tar.bz2
-%deifne url       https://github.com/minfrin/tarmux
+%define url       https://github.com/minfrin/tarmux
 %define packager  Graham Leggett
 %define buildroot %{_builddir}/%{name}-root
 

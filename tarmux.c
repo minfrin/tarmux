@@ -21,12 +21,30 @@
 #include <string.h>
 #include <getopt.h>
 #include <poll.h>
-#include <sys/fcntl.h>
+#include <time.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include <archive.h>
 #include <archive_entry.h>
 
 #include "config.h"
+
+#ifndef HAVE_CLOCK_GETTIME
+/* clock_gettime is not implemented on MacOSX */
+#include <sys/time.h>
+#define CLOCK_REALTIME 0
+int clock_gettime(int clk_id, struct timespec *t)
+{
+    struct timeval now;
+    int rv = gettimeofday(&now, NULL);
+    if (!rv) {
+        t->tv_sec = now.tv_sec;
+        t->tv_nsec = now.tv_usec * 1000;
+    }
+    return rv;
+}
+#endif
 
 typedef struct mux_t
 {
@@ -37,7 +55,7 @@ typedef struct mux_t
 
 void help(const char *name)
 {
-    printf("Usage: %s [-f tarname] [-n sourcename] [file1] [file2] [...]",
+    printf("Usage: %s [-f streamname] [-n sourcename] [file1] [file2] [...]",
             name);
 }
 
@@ -59,13 +77,15 @@ int main(int argc, char * const argv[])
     unsigned char *buffer;
 
     size_t buffer_size = 1024 * 1024;
+
     int out_fd = STDOUT_FILENO;
     int opt;
     int mux_count;
     int i;
     int remaining;
+    int raw = 0;
 
-    while ((opt = getopt(argc, argv, "hvf:-:")) != -1) {
+    while ((opt = getopt(argc, argv, "hvrf:n:-:")) != -1) {
         switch (opt) {
         case '-':
             if (!strcmp(optarg, "help")) {
@@ -93,17 +113,48 @@ int main(int argc, char * const argv[])
         case 'n':
             stdin_name = optarg;
             break;
+        case 'r':
+            raw = 1;
+            break;
         default:
             help(name);
             exit(1);
         }
     }
 
+    /* make sure our tar stream is open for append */
+    if (strcmp(out_file, "-")) {
+        if ((out_fd = open(out_file, O_WRONLY | O_CREAT | O_APPEND, 0666))
+                < 0) {
+            perror(out_file);
+            exit(1);
+        }
+    }
+
+    /* set up the output tar archive */
+    a = archive_write_new();
+
+    if (raw) {
+#ifdef HAVE_ARCHIVE_WRITE_SET_FORMAT_RAW
+        archive_write_set_format_raw(a);
+#else
+        fprintf(stderr,
+                "Error: Raw mode not supported on this platform, aborting.\n");
+        exit(2);
+#endif
+    }
+    else {
+        archive_write_set_format_pax(a);
+    }
+
+    archive_write_open_fd(a, out_fd);
+
     /* remaining parameters are files to mux, otherwise default to stdin */
     mux_count = argc - optind;
     mux = calloc(mux_count > 0 ? mux_count : 1, sizeof(mux_t));
     fds = calloc(mux_count > 0 ? mux_count : 1, sizeof(struct pollfd));
     for (i = 0; i < mux_count; i++) {
+        struct stat st;
 
         mux[i].entry = archive_entry_new();
 
@@ -117,11 +168,15 @@ int main(int argc, char * const argv[])
             exit(2);
         }
 
+        fstat(mux[i].fd, &st);
+        archive_entry_copy_stat(mux[i].entry, &st);
+
         fds[i].fd = mux[i].fd;
         fds[i].events = POLLIN;
 
     }
     if (mux_count == 0) {
+        struct timespec tp;
 
         mux[0].entry = archive_entry_new();
 
@@ -131,6 +186,13 @@ int main(int argc, char * const argv[])
 
         mux[0].fd = STDIN_FILENO;
 
+        clock_gettime(CLOCK_REALTIME, &tp);
+        archive_entry_set_atime(mux[0].entry, tp.tv_sec, tp.tv_nsec);
+        archive_entry_set_birthtime(mux[0].entry, tp.tv_sec, tp.tv_nsec);
+        archive_entry_set_ctime(mux[0].entry, tp.tv_sec, tp.tv_nsec);
+
+        archive_entry_set_perm(mux[0].entry, 0666);
+
         fds[0].fd = mux[0].fd;
         fds[0].events = POLLIN | POLLHUP | POLLERR;
 
@@ -138,12 +200,15 @@ int main(int argc, char * const argv[])
 
     }
 
-    /* make sure our tar stream is open for append */
-    if (strcmp(out_file, "-")) {
-        if ((out_fd = open(out_file, O_WRONLY | O_CREAT | O_APPEND, 0666))
-                < 0) {
-            perror(out_file);
-            exit(1);
+    /* sanity check - we can only use raw if we're muxing one file */
+    if (raw) {
+        if (mux_count > 1) {
+            fprintf(stderr,
+                    "Error: Raw mode cannot be used with multiple files, aborting.\n");
+            exit(3);
+        }
+        else {
+            archive_write_header(a, mux[0].entry);
         }
     }
 
@@ -154,17 +219,16 @@ int main(int argc, char * const argv[])
         exit(3);
     }
 
-    /* set up the output tar archive */
-    a = archive_write_new();
-    archive_write_set_format_pax_restricted(a);
-    archive_write_open_fd(a, out_fd);
-
     remaining = mux_count;
 
     while (remaining) {
         int rc;
 
         rc = poll(fds, mux_count, -1);
+        if (rc < 0) {
+            perror("Error: failure during poll");
+            exit(2);
+        }
 
         for (i = 0; i < mux_count; i++) {
             if (fds[i].revents & POLLIN) {
@@ -173,6 +237,7 @@ int main(int argc, char * const argv[])
 
                 do {
                     ssize_t len;
+
                     len = read(fds[i].fd, buffer + offset, size);
                     if (len < 0) {
                         perror(archive_entry_sourcepath(mux[i].entry));
@@ -181,19 +246,36 @@ int main(int argc, char * const argv[])
                     else if (len == 0) {
                         break;
                     }
+
                     offset += len;
                     size -= len;
+
+                    /* if we would block, leave */
+                    if (poll(&fds[i], 1, 0) < 1) {
+                        break;
+                    }
+
                 } while (size);
 
-                archive_entry_sparse_clear(mux[i].entry);
-                archive_entry_sparse_add_entry(mux[i].entry, mux[i].offset,
-                        offset);
-                mux[i].offset += offset;
+                if (!raw) {
 
-                archive_entry_set_size(mux[i].entry, mux[i].offset);
+                    archive_entry_sparse_clear(mux[i].entry);
+                    archive_entry_sparse_add_entry(mux[i].entry, mux[i].offset,
+                            offset);
+                    mux[i].offset += offset;
 
-                archive_write_header(a, mux[i].entry);
-                archive_write_data(a, buffer, offset);
+                    archive_entry_set_size(mux[i].entry, mux[i].offset);
+
+                    archive_write_header(a, mux[i].entry);
+
+                }
+
+                offset = archive_write_data(a, buffer, offset);
+                if (offset < 0) {
+                    fprintf(stderr, "Error: Could not write data: %s\n",
+                            archive_error_string(a));
+                    exit(4);
+                }
 
                 if (offset == 0) {
 

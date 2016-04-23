@@ -21,7 +21,10 @@ AC_TYPE_UINT32_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([memset strrchr])
+AC_CHECK_FUNCS([clock_gettime])
+
+# Checks for header files
+AC_CHECK_HEADERS([archive_write_set_format_raw])
 
 PKG_CHECK_MODULES(libarchive, libarchive >= 3.1)
 

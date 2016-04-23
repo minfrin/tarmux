@@ -195,7 +195,7 @@ int main(int argc, char * const argv[])
             demux[i].pathname = argv[optind + i];
 
             if ((demux[i].fd = open(demux[i].pathname,
-                    O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK))
+                    O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0666))
                     < 0) {
                 perror(demux[i].pathname);
                 exit(2);

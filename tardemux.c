@@ -38,33 +38,35 @@ typedef struct demux_t
 
 void help(const char *name)
 {
-    printf("Usage: %s [-f streamname] [-a] [file1] [file2] [...]\n"
-            "\n"
-            "This tool demultiplexes streams that have been multiplexed by the\n"
-            "tarmux tool. It expects a series of tar files containing sparse file\n"
-            "fragments that are unpacked and written to form the original stream.\n"
-            "\n"
-            "In the simplest form, tardemux reads a stream from stdin, unpacks the\n"
-            "stream and writes the first stream to stdout, leaving additional data\n"
-            "intact. This allows tardemux to be run again to extract a further\n"
-            "stream.\n"
-            "\n"
-            "If file parameters are specified, the stream is expected to contain\n"
-            "entries matching these files parameters. The fragments will be unpacked\n"
-            "and written to the given paths.\n"
-            "\n"
-            "  -f name, --file=name\tThe name of the input files from which tar\n"
-            "\t\t\tstreams will be read, defaults to stdin. Can be specified more\n"
-            "\t\t\tthan once.\n"
-            "  -r\t\t\tTreat the incoming stream as a raw compressed stream rather\n"
-            "\t\t\tthan a tar stream.\n"
-            "  [file1] [...]\t\tOptional files/pipes expected in the tar stream.\n"
-            "\t\t\tData will be demultiplexed and written to each file/pipe. If this\n"
-            "\t\t\tfile/pipe exists, data will be written to the existing file.\n"
-            "\n"
-            "This tool is based on libarchive, and is licensed under the Apache License,\n"
-            "Version 2.0.\n"
-            "", name);
+    printf(
+            "Usage: %s [-f streamname] [-a] [file1] [file2] [...]\n"
+                    "\n"
+                    "This tool demultiplexes streams that have been multiplexed by the\n"
+                    "tarmux tool. It expects a series of tar files containing sparse file\n"
+                    "fragments that are unpacked and written to form the original stream.\n"
+                    "\n"
+                    "In the simplest form, tardemux reads a stream from stdin, unpacks the\n"
+                    "stream and writes the first stream to stdout, leaving additional data\n"
+                    "intact. This allows tardemux to be run again to extract a further\n"
+                    "stream.\n"
+                    "\n"
+                    "If file parameters are specified, the stream is expected to contain\n"
+                    "entries matching these files parameters. The fragments will be unpacked\n"
+                    "and written to the given paths.\n"
+                    "\n"
+                    "  -f name, --file=name\tThe name of the input files from which tar\n"
+                    "\t\t\tstreams will be read, defaults to stdin. Can be specified more\n"
+                    "\t\t\tthan once.\n"
+                    "  -a\t\t\tUnpack all pathnames in a stream to individual files.\n"
+                    "  -r\t\t\tTreat the incoming stream as a raw compressed stream rather\n"
+                    "\t\t\tthan a tar stream.\n"
+                    "  [file1] [...]\t\tOptional files/pipes expected in the tar stream.\n"
+                    "\t\t\tData will be demultiplexed and written to each file/pipe. If this\n"
+                    "\t\t\tfile/pipe exists, data will be written to the existing file.\n"
+                    "\n"
+                    "This tool is based on libarchive, and is licensed under the Apache License,\n"
+                    "Version 2.0.\n"
+                    "", name);
 }
 
 void version()
@@ -188,15 +190,14 @@ int main(int argc, char * const argv[])
 
     /* remaining parameters are files to mux, otherwise default to stdin */
     demux_count = argc - optind;
-    if (demux_count) {
+    if (demux_count || all) {
         demux = calloc(demux_count, sizeof(demux_t));
         for (i = 0; i < demux_count; i++) {
 
-            demux[i].pathname = argv[optind + i];
+            demux[i].pathname = strdup(argv[optind + i]);
 
             if ((demux[i].fd = open(demux[i].pathname,
-                    O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0666))
-                    < 0) {
+                    O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0666)) < 0) {
                 perror(demux[i].pathname);
                 exit(2);
             }
@@ -240,33 +241,8 @@ int main(int argc, char * const argv[])
             exit(1);
         }
 
-        if (demux) {
-            int found = 0;
-            for (i = 0; i < demux_count; i++) {
-                if (!strcmp(demux[i].pathname, archive_entry_pathname(entry))) {
-                    rv = transfer(a, &demux[i]);
-                    if (rv < 0) {
-                        exit(1);
-                    }
-                    else if (rv == 0) {
-                        if (close(demux[i].fd)) {
-                            fprintf(stderr, "Error: Could not close %s: %s\n",
-                                    demux[i].pathname, strerror(errno));
-                            exit(1);
-                        }
-                        demux[i].fd = 0;
-                    }
-                    found = 1;
-                    break;
-                }
-            }
-            if (!found) {
-                fprintf(stderr, "Error: Unnamed path in stream, aborting: %s\n",
-                        archive_entry_pathname(entry));
-                exit(1);
-            }
-        }
-        else {
+        /* handle demux to stdout */
+        if (sdemux) {
             if (!sdemux->pathname) {
                 sdemux->pathname = strdup(archive_entry_pathname(entry));
                 transfer(a, sdemux);
@@ -282,6 +258,61 @@ int main(int argc, char * const argv[])
             }
         }
 
+        /* handle demux to individual files */
+        else {
+            demux_t *dm = NULL;
+            int found = 0;
+            for (i = 0; i < demux_count; i++) {
+                if (!strcmp(demux[i].pathname, archive_entry_pathname(entry))) {
+                    dm = &demux[i];
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) {
+                if (all) {
+                    demux = realloc(demux, (demux_count + 1) * sizeof(demux_t));
+
+                    demux[demux_count].pathname = strdup(
+                            archive_entry_pathname(entry));
+                    demux[demux_count].offset = 0;
+
+                    if ((demux[demux_count].fd = open(
+                            demux[demux_count].pathname,
+                            O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0666))
+                            < 0) {
+                        perror(demux[demux_count].pathname);
+                        exit(2);
+                    }
+
+                    dm = &demux[demux_count];
+
+                    demux_count++;
+
+                }
+                else {
+                    fprintf(stderr,
+                            "Error: Unnamed path in stream, aborting: %s\n",
+                            archive_entry_pathname(entry));
+                    exit(1);
+                }
+            }
+            if (dm) {
+                rv = transfer(a, dm);
+                if (rv < 0) {
+                    exit(1);
+                }
+                else if (rv == 0) {
+                    if (close(dm->fd)) {
+                        fprintf(stderr, "Error: Could not close %s: %s\n",
+                                dm->pathname, strerror(errno));
+                        exit(1);
+                    }
+                    dm->fd = 0;
+                }
+            }
+        }
+
     }
 
     /* clean up the output files */
@@ -290,6 +321,7 @@ int main(int argc, char * const argv[])
             if (demux[i].fd) {
                 close(demux[i].fd);
             }
+            free(demux[i].pathname);
         }
         free(demux);
     }

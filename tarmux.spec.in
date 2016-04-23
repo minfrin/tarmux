@@ -1,0 +1,55 @@
+# RPM Spec file for tarmux
+
+%define name      tarmux
+%define summary   Multiplex / demultiplex streams
+%define license   ASL v2.0
+%define version   @PACKAGE_VERSION@
+%define release   1
+%define group     Applications/System
+%define source    %{name}-%{version}.tar.bz2
+%define packager  Graham Leggett
+%define buildroot %{_builddir}/%{name}-root
+
+Name:      %{name}
+Version:   %{version}
+Release:   %{release}
+Packager:  %{packager}
+Summary:   %{summary}
+License:  %{license}
+Group:     %{group}
+Source:   %{source}
+Prefix:    %{_prefix}
+Buildroot: %{buildroot}
+BuildRequires: libarchive-devel >= 3
+
+%description
+Multiplex and demultiplex streams using tar file fragments.
+
+%prep
+%setup -q
+%build
+%configure --exec-prefix=%{_prefix} \
+           --bindir=%{_bindir} \
+           --sbindir=%{_sbindir} \
+           --mandir=%{_mandir} \
+           --libdir=%{_libdir}
+
+#make
+
+%pre
+
+%post
+
+%preun
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+%files
+%attr(0755,root,root) %{_bindir}/tardemux
+%attr(0755,root,root) %{_bindir}/tarmux
+%attr(0644,root,root) %{_mandir}/man1/tardemux.1.gz
+%attr(0644,root,root) %{_mandir}/man1/tarmux.1.gz

@@ -28,9 +28,5 @@ AC_CHECK_HEADERS([archive_write_set_format_raw])
 
 PKG_CHECK_MODULES(libarchive, libarchive >= 3.1)
 
-CFLAGS="$CFLAGS $libarchive_CFLAGS"
-CPPFLAGS="$CPPFLAGS $libarchive_CPPFLAGS"
-LDFLAGS="$LDFLAGS $libarchive_LIBS"
-
 AC_OUTPUT
 

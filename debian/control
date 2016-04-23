@@ -1,7 +1,7 @@
 Source: tarmux
 Priority: extra
 Maintainer: Graham Leggett <minfrin@sharp.fm>
-Build-Depends: debhelper (>= 8.0.0), autotools-dev, libarchive-dev
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, libarchive-dev, pkg-config
 Standards-Version: 3.9.4
 Section: utils
 Homepage: https://github.com/minfrin/tarmux

@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <string.h>
+#include <signal.h>
 
 #include <archive.h>
 #include <archive_entry.h>
@@ -182,6 +183,9 @@ int main(int argc, char * const argv[])
         }
     }
 
+    /* make sure we don't die on sigpipe */
+    signal(SIGPIPE, SIG_IGN);
+
     /* remaining parameters are files to mux, otherwise default to stdin */
     demux_count = argc - optind;
     if (demux_count) {
@@ -190,7 +194,8 @@ int main(int argc, char * const argv[])
 
             demux[i].pathname = argv[optind + i];
 
-            if ((demux[i].fd = open(demux[i].pathname, O_WRONLY | O_NONBLOCK))
+            if ((demux[i].fd = open(demux[i].pathname,
+                    O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK))
                     < 0) {
                 perror(demux[i].pathname);
                 exit(2);

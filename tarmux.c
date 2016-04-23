@@ -23,6 +23,7 @@
 #include <poll.h>
 #include <time.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/stat.h>
 
 #include <archive.h>
@@ -150,6 +151,9 @@ int main(int argc, char * const argv[])
             exit(1);
         }
     }
+
+    /* make sure we don't die on sigpipe */
+    signal(SIGPIPE, SIG_IGN);
 
     /* make sure our tar stream is open for append */
     if (strcmp(out_file, "-")) {

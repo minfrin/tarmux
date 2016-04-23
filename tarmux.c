@@ -55,7 +55,7 @@ typedef struct mux_t
 
 void help(const char *name)
 {
-    printf("Usage: %s [-f streamname] [-n sourcename] [file1] [file2] [...]",
+    printf("Usage: %s [-r] [-f streamname] [-n sourcename] [file1] [file2] [...]",
             name);
 }
 
@@ -107,14 +107,14 @@ int main(int argc, char * const argv[])
         case 'v':
             version();
             exit(0);
+        case 'r':
+            raw = 1;
+            break;
         case 'f':
             out_file = optarg;
             break;
         case 'n':
             stdin_name = optarg;
-            break;
-        case 'r':
-            raw = 1;
             break;
         default:
             help(name);

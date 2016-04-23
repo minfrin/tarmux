@@ -55,8 +55,37 @@ typedef struct mux_t
 
 void help(const char *name)
 {
-    printf("Usage: %s [-r] [-f streamname] [-n sourcename] [file1] [file2] [...]",
-            name);
+    printf(
+            "Usage: %s [-r] [-f streamname] [-n sourcename] [file1] [file2] [...]\n"
+                    "\n"
+                    "This tool multiplexes streams such that they may be combined on one\n"
+                    "system and then split apart on another. It does so by wrapping each\n"
+                    "stream in a series of tar files, each tar file representing a sparse\n"
+                    "fragment of the original stream, creating a tar stream.\n"
+                    "\n"
+                    "In the simplest form, tarmux reads data from stdin, and then outputs\n"
+                    "the tar stream to stdout. The corresponding tardemux command reverses\n"
+                    "this process by reading to the end of the tar stream, but no further.\n"
+                    "This allows streams to be concatenated and later separated from one\n"
+                    "another.\n"
+                    "\n"
+                    "If file parameters are specified, data is read from each file concurrently\n"
+                    "and added to the tar stream. If pipe parameters are specified, data\n"
+                    "can be read and multiplexed from other processes. When multiple file or\n"
+                    "pipe parameters are specified, data is read concurrently and interleaved\n"
+                    "until the last file or pipe has closed.\n"
+                    "\n"
+                    "  -f name, --file=name\t\tThe name of the output file to which tar\n"
+                    "\t\t\t\tstreams will be appended, defaults to stdout.\n"
+                    "  -n pathname, --name=pathname\tThe pathname to embed in the tar\n"
+                    "\t\t\t\tfiles when the input is stdin. Defaults to '-'.\n"
+                    "  [file1] [...]\t\t\tOptional files/pipes whose content will be included in\n"
+                    "\t\t\t\tthe tar stream. Regardless of the type of source, data is\n"
+                    "\t\t\t\tembedded as a regular file in the tar stream.\n"
+                    "\n"
+                    "This tool is based on libarchive, and is licensed under the Apache License,\n"
+                    " Version 2.0.\n"
+                    "", name);
 }
 
 void version()

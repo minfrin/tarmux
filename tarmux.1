@@ -4,9 +4,41 @@
 tarmux \- manual page for tarmux 0.0.1
 .SH SYNOPSIS
 .B tarmux
-[\fI\,-f tarname\/\fR] [\fI\,-n sourcename\/\fR] [\fI\,file1\/\fR] [\fI\,file2\/\fR] [...]
+[\fI\,-r\/\fR] [\fI\,-f streamname\/\fR] [\fI\,-n sourcename\/\fR] [\fI\,file1\/\fR] [\fI\,file2\/\fR] [...]
 .SH DESCRIPTION
-
+This tool multiplexes streams such that they may be combined on one
+system and then split apart on another. It does so by wrapping each
+stream in a series of tar files, each tar file representing a sparse
+fragment of the original stream, creating a tar stream.
+.PP
+In the simplest form, tarmux reads data from stdin, and then outputs
+the tar stream to stdout. The corresponding tardemux command reverses
+this process by reading to the end of the tar stream, but no further.
+This allows streams to be concatenated and later separated from one
+another.
+.PP
+If file parameters are specified, data is read from each file concurrently
+and added to the tar stream. If pipe parameters are specified, data
+can be read and multiplexed from other processes. When multiple file or
+pipe parameters are specified, data is read concurrently and interleaved
+until the last file or pipe has closed.
+.TP
+\fB\-f\fR name, \fB\-\-file\fR=\fI\,name\/\fR
+The name of the output file to which tar
+streams will be appended, defaults to stdout.
+.TP
+\fB\-n\fR pathname, \fB\-\-name\fR=\fI\,pathname\/\fR
+The pathname to embed in the tar
+files when the input is stdin. Defaults to '\-'.
+.TP
+[file1] [...]
+Optional files/pipes whose content will be included in
+the tar stream. Regardless of the type of source, data is
+embedded as a regular file in the tar stream.
+.PP
+This tool is based on libarchive, and is licensed under the Apache License,
+.IP
+Version 2.0.
 .SH "SEE ALSO"
 The full documentation for
 .B tarmux

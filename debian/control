@@ -1,0 +1,14 @@
+Source: tarmux
+Priority: extra
+Maintainer: Graham Leggett <minfrin@sharp.fm>
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, libarchive-dev
+Standards-Version: 3.9.2
+Section: utils
+Homepage: https://github.com/minfrin/tarmux
+
+Package: tarmux
+Section: utils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Multiplex and demultiplex streams using tar file fragments.
+

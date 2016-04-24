@@ -97,11 +97,11 @@ void version()
 
 static void entry_pathindex(mux_t *mux)
 {
-    int len;
     char *name;
 
-    len = sprintf(NULL, "%s.%lld", mux->pathname, mux->index);
-    name = malloc((len + 1) * sizeof(char));
+    name = malloc(
+            (snprintf(NULL, 0, "%s.%lld", mux->pathname, mux->index) + 1)
+                    * sizeof(char));
     sprintf(name, "%s.%lld", mux->pathname, mux->index);
 
     archive_entry_copy_pathname(mux->entry, name);

@@ -39,7 +39,7 @@ typedef struct demux_t
 void help(const char *name)
 {
     printf(
-            "Usage: %s [-f streamname] [-a] [r] [file1] [file2] [...]\n"
+            "Usage: %s [-f streamname] [-a] [-r] [file1] [file2] [...]\n"
                     "\n"
                     "This tool demultiplexes streams that have been multiplexed by the\n"
                     "tarmux tool. It expects a series of tar files containing sparse file\n"

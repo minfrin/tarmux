@@ -107,11 +107,13 @@ int transfer(struct archive *a, demux_t *demux)
             return blocks;
         }
 
-        offset = lseek(demux->fd, offset, SEEK_SET);
-        if (offset < 0) {
-            fprintf(stderr, "Error: Could not lseek on %s: %s\n",
-                    demux->pathname, strerror(errno));
-            return -1;
+        if (demux->fd != STDOUT_FILENO) {
+            offset = lseek(demux->fd, offset, SEEK_SET);
+            if (offset < 0) {
+                fprintf(stderr, "Error: Could not lseek on %s: %s\n",
+                        demux->pathname, strerror(errno));
+                return -1;
+            }
         }
 
         size = write(demux->fd, buff, len);

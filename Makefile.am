@@ -7,7 +7,7 @@ tarmux_LDADD = ${libarchive_LIBS}
 tardemux_SOURCES = tardemux.c
 tardemux_LDADD = ${libarchive_LIBS}
 
-EXTRA_DIST = tarmux.spec
+EXTRA_DIST = tarmux.spec debian/changelog debian/compat debian/control debian/copyright debian/docs debian/tarmux.dirs debian/rules debian/source/format
 dist_man_MANS = tarmux.1 tardemux.1
 
 tarmux.1: tarmux

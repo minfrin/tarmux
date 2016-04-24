@@ -14,6 +14,46 @@ The tardemux tool only reads a single tar stream before exiting. This allows
 multiple streams to be concatenated in the same stream, and then split out
 by each invocation of tardemux.
 
+# example
+
+If three separate sets of data are concatenated together as follows:
+
+```
+Little-Net:trunk minfrin$ cat ./test-source.sh 
+#!/bin/bash
+
+echo "one" | tarmux
+echo "two" | tarmux
+echo "three" | tarmux
+```
+
+The data can be split apart again back into the original three separate
+streams as follows:
+
+```
+Little-Net:trunk minfrin$ cat ./test-sink.sh 
+#!/bin/bash
+
+tardemux
+tardemux
+tardemux
+```
+
+This results in the following output:
+
+```
+Little-Net:trunk minfrin$ ./test-source.sh | ./test-sink.sh 
+one
+two
+three
+```
+
+Each invocation of tardemux can be piped to a separate pipeline for further
+processing.
+
+Optional files and/or pipes can be specified on the tarmux and tardemux
+command lines to multiplex multiple streams into the same stream concurrently.
+
 # about tarmux
 
 Tarmux is written for speed in portable C, and is tested on MacOSX, Redhat

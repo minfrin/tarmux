@@ -177,7 +177,7 @@ int main(int argc, char * const argv[])
 #endif
     }
     else {
-        archive_write_set_format_pax(a);
+        archive_write_set_format_pax_restricted(a);
     }
 
     archive_write_open_fd(a, out_fd);

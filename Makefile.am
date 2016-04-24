@@ -1,5 +1,5 @@
 
-AM_CXXFLAGS = ${libarchive_CFLAGS}
+AM_CFLAGS = ${libarchive_CFLAGS}
 
 bin_PROGRAMS = tarmux tardemux
 tarmux_SOURCES = tarmux.c

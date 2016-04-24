@@ -10,4 +10,9 @@ tardemux_LDADD = ${libarchive_LIBS}
 EXTRA_DIST = tarmux.spec
 dist_man_MANS = tarmux.1 tardemux.1
 
+tarmux.1: tarmux
+	which -s help2man && help2man ./tarmux > tarmux.1
+
+tardemux.1: tardemux
+	which -s help2man && help2man ./tardemux > tardemux.1
 

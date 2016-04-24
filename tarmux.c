@@ -50,6 +50,8 @@ int clock_gettime(int clk_id, struct timespec *t)
 typedef struct mux_t
 {
     struct archive_entry *entry;
+    const char *pathname;
+    int64_t index;
     int fd;
 } mux_t;
 
@@ -91,6 +93,23 @@ void help(const char *name)
 void version()
 {
     printf(PACKAGE_STRING "\n");
+}
+
+static void entry_pathindex(mux_t *mux)
+{
+    int len;
+    char *name;
+
+    len = sprintf(NULL, "%s.%lld", mux->pathname, mux->index);
+    name = malloc((len + 1) * sizeof(char));
+    sprintf(name, "%s.%lld", mux->pathname, mux->index);
+
+    archive_entry_copy_pathname(mux->entry, name);
+
+    free(name);
+
+    mux->index++;
+
 }
 
 int main(int argc, char * const argv[])
@@ -189,9 +208,9 @@ int main(int argc, char * const argv[])
         struct stat st;
 
         mux[i].entry = archive_entry_new();
+        mux[i].pathname = argv[optind + i];
 
         archive_entry_set_filetype(mux[i].entry, AE_IFREG);
-        archive_entry_set_pathname(mux[i].entry, argv[optind + i]);
         archive_entry_copy_sourcepath(mux[i].entry, argv[optind + i]);
 
         if ((mux[i].fd = open(archive_entry_sourcepath(mux[i].entry),
@@ -211,9 +230,9 @@ int main(int argc, char * const argv[])
         struct timespec tp;
 
         mux[0].entry = archive_entry_new();
+        mux[0].pathname = stdin_name;
 
         archive_entry_set_filetype(mux[0].entry, AE_IFREG);
-        archive_entry_set_pathname(mux[0].entry, stdin_name);
         archive_entry_copy_sourcepath(mux[0].entry, stdin_name);
 
         mux[0].fd = STDIN_FILENO;
@@ -290,6 +309,8 @@ int main(int argc, char * const argv[])
                 } while (size);
 
                 if (!raw) {
+
+                    entry_pathindex(&mux[i]);
 
                     archive_entry_set_size(mux[i].entry, offset);
 

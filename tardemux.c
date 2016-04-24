@@ -23,6 +23,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <signal.h>
+#include <ctype.h>
 
 #include <archive.h>
 #include <archive_entry.h>
@@ -71,6 +72,42 @@ void help(const char *name)
 void version()
 {
     printf(PACKAGE_STRING "\n");
+}
+
+/*
+ * Returns the length of the path, ignoring any trailing
+ * numeric suffix following the last dot.
+ *
+ * If the path does not contain a numeric suffix, the
+ * length of the whole path is returned.
+ */
+static int pathlen(const char *pathname)
+{
+    const char *slider;
+
+    slider = strrchr(pathname, '.');
+
+    if (slider) {
+        int i, offset, valid = 1;
+
+        offset = slider - pathname;
+
+        i = offset + 1;
+        while (pathname[i]) {
+            if (!isdigit(pathname[i])) {
+                valid = 0;
+            }
+            i++;
+        }
+
+        if (valid) {
+            return offset;
+        }
+
+        return i;
+    }
+
+    return strlen(pathname);
 }
 
 int transfer(struct archive *a, demux_t *demux)
@@ -259,11 +296,14 @@ int main(int argc, char * const argv[])
             demux_t *dm = NULL;
             int found = 0;
             for (i = 0; i < demux_count; i++) {
-                if (!strcmp(demux[i].pathname, archive_entry_pathname(entry))) {
+                const char *pathname = archive_entry_pathname(entry);
+
+                if (!strncmp(demux[i].pathname, pathname, pathlen(pathname))) {
                     dm = &demux[i];
                     found = 1;
                     break;
                 }
+
             }
             if (!found) {
                 if (all) {

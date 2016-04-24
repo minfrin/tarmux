@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <getopt.h>
 #include <poll.h>
 #include <time.h>
@@ -101,9 +102,9 @@ static void entry_pathindex(mux_t *mux)
     char *name;
 
     name = malloc(
-            (snprintf(NULL, 0, "%s.%lld", mux->pathname, mux->index) + 1)
+            (snprintf(NULL, 0, "%s.%" PRId64 "", mux->pathname, mux->index) + 1)
                     * sizeof(char));
-    sprintf(name, "%s.%lld", mux->pathname, mux->index);
+    sprintf(name, "%s.%" PRId64 "", mux->pathname, mux->index);
 
     archive_entry_copy_pathname(mux->entry, name);
 

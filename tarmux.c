@@ -132,6 +132,7 @@ int main(int argc, char * const argv[])
     int i;
     int remaining;
     int raw = 0;
+    int rv;
 
     while ((opt = getopt(argc, argv, "hvrf:n:-:")) != -1) {
         switch (opt) {
@@ -219,7 +220,10 @@ int main(int argc, char * const argv[])
             exit(2);
         }
 
-        fstat(mux[i].fd, &st);
+        if ((rv = fstat(mux[i].fd, &st))) {
+            perror(mux[i].pathname);
+            exit(1);
+        }
         archive_entry_copy_stat(mux[i].entry, &st);
 
         fds[i].fd = mux[i].fd;
@@ -259,7 +263,11 @@ int main(int argc, char * const argv[])
             exit(3);
         }
         else {
-            archive_write_header(a, mux[0].entry);
+            if ((rv = archive_write_header(a, mux[0].entry))) {
+                fprintf(stderr, "Could not write header: %s\n",
+                        archive_error_string(a));
+                exit(1);
+            }
         }
     }
 
@@ -314,7 +322,11 @@ int main(int argc, char * const argv[])
 
                     archive_entry_set_size(mux[i].entry, offset);
 
-                    archive_write_header(a, mux[i].entry);
+                    if ((rv = archive_write_header(a, mux[i].entry))) {
+                        fprintf(stderr, "Could not write header: %s\n",
+                                archive_error_string(a));
+                        exit(1);
+                    }
 
                 }
 
@@ -326,6 +338,12 @@ int main(int argc, char * const argv[])
                 }
 
                 if (offset == 0) {
+
+                    if ((rv = archive_write_finish_entry(a))) {
+                        fprintf(stderr, "Could not write finish entry: %s\n",
+                                archive_error_string(a));
+                        exit(1);
+                    }
 
                     fds[i].events = 0;
                     archive_entry_free(mux[i].entry);
@@ -340,7 +358,11 @@ int main(int argc, char * const argv[])
 
     }
 
-    archive_write_close(a);
+    if ((rv = archive_write_close(a))) {
+        fprintf(stderr, "Could not close write: %s\n", archive_error_string(a));
+        exit(1);
+    }
+
     archive_write_free(a);
 
     close(out_fd);

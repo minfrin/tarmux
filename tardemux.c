@@ -32,7 +32,6 @@
 typedef struct demux_t
 {
     char *pathname;
-    int64_t offset;
     int fd;
 } demux_t;
 
@@ -105,15 +104,6 @@ int transfer(struct archive *a, demux_t *demux)
 
         if (len == 0) {
             return blocks;
-        }
-
-        if (demux->fd != STDOUT_FILENO) {
-            offset = lseek(demux->fd, offset, SEEK_SET);
-            if (offset < 0) {
-                fprintf(stderr, "Error: Could not lseek on %s: %s\n",
-                        demux->pathname, strerror(errno));
-                return -1;
-            }
         }
 
         do {
@@ -281,7 +271,6 @@ int main(int argc, char * const argv[])
 
                     demux[demux_count].pathname = strdup(
                             archive_entry_pathname(entry));
-                    demux[demux_count].offset = 0;
 
                     if ((demux[demux_count].fd = open(
                             demux[demux_count].pathname,

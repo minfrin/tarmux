@@ -50,7 +50,6 @@ int clock_gettime(int clk_id, struct timespec *t)
 typedef struct mux_t
 {
     struct archive_entry *entry;
-    int64_t offset;
     int fd;
 } mux_t;
 
@@ -292,12 +291,7 @@ int main(int argc, char * const argv[])
 
                 if (!raw) {
 
-                    archive_entry_sparse_clear(mux[i].entry);
-                    archive_entry_sparse_add_entry(mux[i].entry, mux[i].offset,
-                            offset);
-                    mux[i].offset += offset;
-
-                    archive_entry_set_size(mux[i].entry, mux[i].offset);
+                    archive_entry_set_size(mux[i].entry, offset);
 
                     archive_write_header(a, mux[i].entry);
 

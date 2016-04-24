@@ -276,11 +276,12 @@ int main(int argc, char * const argv[])
 
         /* handle demux to stdout */
         if (sdemux) {
+            const char *pathname = archive_entry_pathname(entry);
             if (!sdemux->pathname) {
-                sdemux->pathname = strdup(archive_entry_pathname(entry));
+                sdemux->pathname = strndup(pathname, pathlen(pathname));
                 transfer(a, sdemux);
             }
-            else if (!strcmp(sdemux->pathname, archive_entry_pathname(entry))) {
+            else if (!strncmp(sdemux->pathname, pathname, pathlen(pathname))) {
                 transfer(a, sdemux);
             }
             else {

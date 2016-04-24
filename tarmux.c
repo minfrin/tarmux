@@ -85,7 +85,7 @@ void help(const char *name)
                     "\t\t\t\tembedded as a regular file in the tar stream.\n"
                     "\n"
                     "This tool is based on libarchive, and is licensed under the Apache License,\n"
-                    " Version 2.0.\n"
+                    "Version 2.0.\n"
                     "", name);
 }
 

@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <getopt.h>
 #include <poll.h>
 #include <time.h>
@@ -249,7 +250,7 @@ int main(int argc, char * const argv[])
         archive_entry_set_perm(mux[0].entry, 0666);
 
         fds[0].fd = mux[0].fd;
-        fds[0].events = POLLIN | POLLHUP | POLLERR;
+        fds[0].events = POLLIN;
 
         mux_count = 1;
 
@@ -290,7 +291,7 @@ int main(int argc, char * const argv[])
         }
 
         for (i = 0; i < mux_count; i++) {
-            if (fds[i].revents & POLLIN) {
+            if ((fds[i].revents & POLLIN) || (fds[i].revents & POLLHUP)) {
                 ssize_t offset = 0;
                 size_t size = buffer_size;
 
@@ -299,8 +300,14 @@ int main(int argc, char * const argv[])
 
                     len = read(fds[i].fd, buffer + offset, size);
                     if (len < 0) {
-                        perror(archive_entry_sourcepath(mux[i].entry));
-                        exit(4);
+                        if (EOF == errno) {
+                            len = 0;
+                            break;
+                        }
+                        else {
+                            perror(archive_entry_sourcepath(mux[i].entry));
+                            exit(4);
+                        }
                     }
                     else if (len == 0) {
                         break;
@@ -354,6 +361,7 @@ int main(int argc, char * const argv[])
                 }
 
             }
+
         }
 
     }

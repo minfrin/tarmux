@@ -116,12 +116,16 @@ int transfer(struct archive *a, demux_t *demux)
             }
         }
 
-        size = write(demux->fd, buff, len);
-        if (size < 0) {
-            fprintf(stderr, "Error: Could not write to %s: %s\n",
-                    demux->pathname, strerror(errno));
-            return -1;
-        }
+        do {
+            size = write(demux->fd, buff, len);
+            if (size < 0) {
+                fprintf(stderr, "Error: Could not write to %s: %s\n",
+                        demux->pathname, strerror(errno));
+                return -1;
+            }
+            len -= size;
+            buff += size;
+        } while (len);
 
         blocks++;
     }

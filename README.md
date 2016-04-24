@@ -19,3 +19,9 @@ by each invocation of tardemux.
 Tarmux is written for speed in portable C, and is tested on MacOSX, Redhat
 and Ubuntu. Tar mux depends on libarchive http://www.libarchive.org/.
 Packaging is available for RPM and Debian/Ubuntu systems.
+
+# license
+
+Tarmux is written by Graham Leggett, and is licensed under the Apache
+Licence, Version 2.
+

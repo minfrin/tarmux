@@ -19,10 +19,19 @@ Multiplex and demultiplex streams using tar file fragments.
 %configure
 %make_build
 
+%install
 %make_install
 
 %files
 %{_bindir}/tardemux
 %{_bindir}/tarmux
-%{_mandir}/man1/tardemux.1
-%{_mandir}/man1/tarmux.1
+%{_mandir}/man1/tardemux.1*
+%{_mandir}/man1/tarmux.1*
+
+%doc AUTHORS ChangeLog NEWS README
+%license COPYING
+
+%changelog
+* Sun May 22 2016 Graham Leggett <minfrin@sharp.fm> - 1.0.0-1
+- Initial version of the package
+

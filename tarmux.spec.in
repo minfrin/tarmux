@@ -8,7 +8,7 @@ License:   ASL 2.0
 Group:     Applications/System
 Source:    https://github.com/minfrin/%{name}/releases/download/%{name}-%{version}/%{name}-%{version}.tar.bz2
 URL:	   https://github.com/minfrin/tarmux
-BuildRequires: libarchive-devel >= 3, help2man
+BuildRequires: libarchive-devel >= 3, help2man, gcc
 
 %description
 Multiplex and demultiplex streams using tar file fragments.

@@ -4,7 +4,7 @@ Name:      tarmux
 Version:   1.0.0
 Release:   1%{?dist}
 Summary:   Multiplex / demultiplex streams
-License:   ASL v2.0
+License:   ASL 2.0
 Group:     Applications/System
 Source:    https://github.com/minfrin/%{name}/releases/download/%{name}-%{version}/%{name}-%{version}.tar.bz2
 URL:	   https://github.com/minfrin/tarmux

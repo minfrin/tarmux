@@ -14,6 +14,11 @@ The tardemux tool only reads a single tar stream before exiting. This allows
 multiple streams to be concatenated in the same stream, and then split out
 by each invocation of tardemux.
 
+Note: When compressing a tarmux stream, compress each individual component
+of the stream separately and tarmux the result. If you do the inverse and
+compress the tarmux the decompression will be greedy and force tarmux to
+be greedy too. This is not a bug.
+
 # example
 
 If three separate sets of data are concatenated together as follows:

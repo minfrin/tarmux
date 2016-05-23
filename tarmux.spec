@@ -1,7 +1,7 @@
 # RPM Spec file for tarmux
 
 Name:      tarmux
-Version:   1.0.0
+Version:   1.0.1
 Release:   1%{?dist}
 Summary:   Multiplex / demultiplex streams
 License:   ASL 2.0
@@ -15,6 +15,7 @@ Multiplex and demultiplex streams using tar file fragments.
 
 %prep
 %setup -q
+rm -rf %{_builddir}/%{name}-%{version}/debian
 %build
 %configure
 %make_build
@@ -28,10 +29,12 @@ Multiplex and demultiplex streams using tar file fragments.
 %{_mandir}/man1/tardemux.1*
 %{_mandir}/man1/tarmux.1*
 
-%doc AUTHORS ChangeLog NEWS README
+%doc AUTHORS ChangeLog README
 %license COPYING
 
 %changelog
+* Mon May 23 2016 Graham Leggett <minfrin@sharp.fm> - 1.0.1-1
+- Updates to packaging
 * Sun May 22 2016 Graham Leggett <minfrin@sharp.fm> - 1.0.0-1
 - Initial version of the package
 

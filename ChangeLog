@@ -1,4 +1,9 @@
 
+Changes with v1.0.1
+
+  *) Updates to the spec file for the benefit of Fedora.
+     [Graham Leggett]
+
 Changes with v1.0.0
 
   *) Initial creation of the autotools. [Graham Leggett]

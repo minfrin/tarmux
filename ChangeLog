@@ -1,4 +1,8 @@
 
+Changes with v1.0.2
+
+  *) Tighten error handling in tardemux. [Graham Leggett]
+
 Changes with v1.0.1
 
   *) Updates to the spec file for the benefit of Fedora.

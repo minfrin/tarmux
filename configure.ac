@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(tarmux, 1.0.1, minfrin@sharp.fm)
+AC_INIT(tarmux, 1.0.2, minfrin@sharp.fm)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AC_CONFIG_FILES([Makefile tarmux.spec])
 AC_CONFIG_SRCDIR([tarmux.c])

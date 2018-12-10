@@ -122,28 +122,16 @@ int transfer(struct archive *a, demux_t *demux)
 
     for (;;) {
 
-        for (;;) {
-            rv = archive_read_data_block(a, &buff, &len, &offset);
-            if (rv == ARCHIVE_FATAL) {
-                fprintf(stderr, "Error: %s\n", archive_error_string(a));
-                return -1;
-            }
-            if (rv == ARCHIVE_WARN) {
-                fprintf(stderr, "Warning: %s\n", archive_error_string(a));
-                break;
-            }
-            if (rv == ARCHIVE_RETRY) {
-                fprintf(stderr, "Warning: %s\n", archive_error_string(a));
-                continue;
-            }
-            break;
+        rv = archive_read_data_block(a, &buff, &len, &offset);
+        if (rv == ARCHIVE_FATAL) {
+            fprintf(stderr, "Error: %s\n", archive_error_string(a));
+            return -1;
+        }
+        if (rv == ARCHIVE_WARN) {
+            fprintf(stderr, "Warning: %s\n", archive_error_string(a));
         }
 
-        if (len == 0) {
-            return blocks;
-        }
-
-        do {
+        while (len) {
             size = write(demux->fd, buff, len);
             if (size < 0) {
                 fprintf(stderr, "Error: Could not write to %s: %s\n",
@@ -152,7 +140,19 @@ int transfer(struct archive *a, demux_t *demux)
             }
             len -= size;
             buff += size;
-        } while (len);
+        };
+
+        if (rv == ARCHIVE_RETRY) {
+            fprintf(stderr, "Warning (Retry): %s\n", archive_error_string(a));
+            continue;
+        }
+        if (rv == ARCHIVE_EOF) {
+            break;
+        }
+
+        if (rv == ARCHIVE_OK && len == 0) {
+            return blocks;
+        }
 
         blocks++;
     }
@@ -266,23 +266,37 @@ int main(int argc, char * const argv[])
     for (;;) {
 
         rv = archive_read_next_header(a, &entry);
-        if (rv == ARCHIVE_EOF) {
-            break;
-        }
-        if (rv < ARCHIVE_OK) {
+        if (rv == ARCHIVE_FATAL) {
             fprintf(stderr, "Error: %s\n", archive_error_string(a));
             exit(1);
         }
+        else if (rv == ARCHIVE_WARN) {
+            fprintf(stderr, "Warning: %s\n", archive_error_string(a));
+        }
+        else if (rv == ARCHIVE_RETRY) {
+            fprintf(stderr, "Warning (Retry): %s\n", archive_error_string(a));
+            continue;
+        }
+        else if (rv == ARCHIVE_EOF) {
+            break;
+        }
+        /* otherwise ARCHIVE_OK */
 
         /* handle demux to stdout */
         if (sdemux) {
             const char *pathname = archive_entry_pathname(entry);
             if (!sdemux->pathname) {
                 sdemux->pathname = strndup(pathname, pathlen(pathname));
-                transfer(a, sdemux);
+                rv = transfer(a, sdemux);
+                if (rv < 0) {
+                    exit(1);
+                }
             }
             else if (!strncmp(sdemux->pathname, pathname, pathlen(pathname))) {
-                transfer(a, sdemux);
+                rv = transfer(a, sdemux);
+                if (rv < 0) {
+                    exit(1);
+                }
             }
             else {
                 fprintf(stderr,

@@ -110,7 +110,7 @@ static int pathlen(const char *pathname)
     return strlen(pathname);
 }
 
-int transfer(struct archive *a, demux_t *demux)
+ssize_t transfer(struct archive *a, demux_t *demux)
 {
     const void *buff;
     size_t len;
@@ -118,14 +118,14 @@ int transfer(struct archive *a, demux_t *demux)
     ssize_t size;
 
     int rv;
-    int blocks = 0;
+    ssize_t total = 0;
 
     for (;;) {
 
         rv = archive_read_data_block(a, &buff, &len, &offset);
         if (rv == ARCHIVE_FATAL) {
             fprintf(stderr, "Error: %s\n", archive_error_string(a));
-            return -1;
+            break;
         }
         if (rv == ARCHIVE_WARN) {
             fprintf(stderr, "Warning: %s\n", archive_error_string(a));
@@ -136,10 +136,11 @@ int transfer(struct archive *a, demux_t *demux)
             if (size < 0) {
                 fprintf(stderr, "Error: Could not write to %s: %s\n",
                         demux->pathname, strerror(errno));
-                return -1;
+                break;
             }
             len -= size;
             buff += size;
+            total += size;
         };
 
         if (rv == ARCHIVE_RETRY) {
@@ -147,14 +148,8 @@ int transfer(struct archive *a, demux_t *demux)
             continue;
         }
         if (rv == ARCHIVE_EOF) {
-            break;
+            return total;
         }
-
-        if (rv == ARCHIVE_OK && len == 0) {
-            return blocks;
-        }
-
-        blocks++;
     }
 
     return -1;
@@ -172,6 +167,7 @@ int main(int argc, char * const argv[])
     const char **filenames = NULL;
 
     size_t blocksize = 10240;
+    ssize_t total = 0;
 
     int opt;
     int all = 0;
@@ -287,15 +283,21 @@ int main(int argc, char * const argv[])
             const char *pathname = archive_entry_pathname(entry);
             if (!sdemux->pathname) {
                 sdemux->pathname = strndup(pathname, pathlen(pathname));
-                rv = transfer(a, sdemux);
-                if (rv < 0) {
+                total = transfer(a, sdemux);
+                if (total < 0) {
                     exit(1);
+                }
+                else if (total == 0) {
+                    break;
                 }
             }
             else if (!strncmp(sdemux->pathname, pathname, pathlen(pathname))) {
-                rv = transfer(a, sdemux);
-                if (rv < 0) {
+                total = transfer(a, sdemux);
+                if (total < 0) {
                     exit(1);
+                }
+                else if (total == 0) {
+                    break;
                 }
             }
             else {
@@ -348,17 +350,18 @@ int main(int argc, char * const argv[])
                 }
             }
             if (dm) {
-                rv = transfer(a, dm);
-                if (rv < 0) {
+                total = transfer(a, dm);
+                if (total < 0) {
                     exit(1);
                 }
-                else if (rv == 0) {
+                else if (total == 0) {
                     if (close(dm->fd)) {
                         fprintf(stderr, "Error: Could not close %s: %s\n",
                                 dm->pathname, strerror(errno));
                         exit(1);
                     }
                     dm->fd = 0;
+                    break;
                 }
             }
         }

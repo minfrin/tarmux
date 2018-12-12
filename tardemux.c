@@ -110,7 +110,7 @@ static int pathlen(const char *pathname)
     return strlen(pathname);
 }
 
-int transfer(struct archive *a, demux_t *demux)
+ssize_t transfer(struct archive *a, demux_t *demux)
 {
     const void *buff;
     size_t len;
@@ -118,43 +118,38 @@ int transfer(struct archive *a, demux_t *demux)
     ssize_t size;
 
     int rv;
-    int blocks = 0;
+    ssize_t total = 0;
 
     for (;;) {
 
-        for (;;) {
-            rv = archive_read_data_block(a, &buff, &len, &offset);
-            if (rv == ARCHIVE_FATAL) {
-                fprintf(stderr, "Error: %s\n", archive_error_string(a));
-                return -1;
-            }
-            if (rv == ARCHIVE_WARN) {
-                fprintf(stderr, "Warning: %s\n", archive_error_string(a));
-                break;
-            }
-            if (rv == ARCHIVE_RETRY) {
-                fprintf(stderr, "Warning: %s\n", archive_error_string(a));
-                continue;
-            }
+        rv = archive_read_data_block(a, &buff, &len, &offset);
+        if (rv == ARCHIVE_FATAL) {
+            fprintf(stderr, "Error: while reading data block: %s\n", archive_error_string(a));
             break;
         }
-
-        if (len == 0) {
-            return blocks;
+        if (rv == ARCHIVE_WARN) {
+            fprintf(stderr, "Warning: while reading data block: %s\n", archive_error_string(a));
         }
 
-        do {
+        while (len) {
             size = write(demux->fd, buff, len);
             if (size < 0) {
-                fprintf(stderr, "Error: Could not write to %s: %s\n",
+                fprintf(stderr, "Error: could not write data block to %s: %s\n",
                         demux->pathname, strerror(errno));
-                return -1;
+                break;
             }
             len -= size;
             buff += size;
-        } while (len);
+            total += size;
+        };
 
-        blocks++;
+        if (rv == ARCHIVE_RETRY) {
+            fprintf(stderr, "Warning (Retry): while reading data block: %s\n", archive_error_string(a));
+            continue;
+        }
+        if (rv == ARCHIVE_EOF) {
+            return total;
+        }
     }
 
     return -1;
@@ -172,6 +167,7 @@ int main(int argc, char * const argv[])
     const char **filenames = NULL;
 
     size_t blocksize = 10240;
+    ssize_t total = 0;
 
     int opt;
     int all = 0;
@@ -266,23 +262,43 @@ int main(int argc, char * const argv[])
     for (;;) {
 
         rv = archive_read_next_header(a, &entry);
-        if (rv == ARCHIVE_EOF) {
-            break;
-        }
-        if (rv < ARCHIVE_OK) {
-            fprintf(stderr, "Error: %s\n", archive_error_string(a));
+        if (rv == ARCHIVE_FATAL) {
+            fprintf(stderr, "Error: while reading archive header: %s\n", archive_error_string(a));
             exit(1);
         }
+        else if (rv == ARCHIVE_WARN) {
+            fprintf(stderr, "Warning: while reading archive header: %s\n", archive_error_string(a));
+        }
+        else if (rv == ARCHIVE_RETRY) {
+            fprintf(stderr, "Warning (Retry): while reading archive header: %s\n", archive_error_string(a));
+            continue;
+        }
+        else if (rv == ARCHIVE_EOF) {
+            break;
+        }
+        /* otherwise ARCHIVE_OK */
 
         /* handle demux to stdout */
         if (sdemux) {
             const char *pathname = archive_entry_pathname(entry);
             if (!sdemux->pathname) {
                 sdemux->pathname = strndup(pathname, pathlen(pathname));
-                transfer(a, sdemux);
+                total = transfer(a, sdemux);
+                if (total < 0) {
+                    exit(1);
+                }
+                else if (total == 0) {
+                    break;
+                }
             }
             else if (!strncmp(sdemux->pathname, pathname, pathlen(pathname))) {
-                transfer(a, sdemux);
+                total = transfer(a, sdemux);
+                if (total < 0) {
+                    exit(1);
+                }
+                else if (total == 0) {
+                    break;
+                }
             }
             else {
                 fprintf(stderr,
@@ -334,17 +350,18 @@ int main(int argc, char * const argv[])
                 }
             }
             if (dm) {
-                rv = transfer(a, dm);
-                if (rv < 0) {
+                total = transfer(a, dm);
+                if (total < 0) {
                     exit(1);
                 }
-                else if (rv == 0) {
+                else if (total == 0) {
                     if (close(dm->fd)) {
                         fprintf(stderr, "Error: Could not close %s: %s\n",
                                 dm->pathname, strerror(errno));
                         exit(1);
                     }
                     dm->fd = 0;
+                    break;
                 }
             }
         }

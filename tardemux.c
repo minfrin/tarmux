@@ -124,17 +124,17 @@ ssize_t transfer(struct archive *a, demux_t *demux)
 
         rv = archive_read_data_block(a, &buff, &len, &offset);
         if (rv == ARCHIVE_FATAL) {
-            fprintf(stderr, "Error: %s\n", archive_error_string(a));
+            fprintf(stderr, "Error: while reading data block: %s\n", archive_error_string(a));
             break;
         }
         if (rv == ARCHIVE_WARN) {
-            fprintf(stderr, "Warning: %s\n", archive_error_string(a));
+            fprintf(stderr, "Warning: while reading data block: %s\n", archive_error_string(a));
         }
 
         while (len) {
             size = write(demux->fd, buff, len);
             if (size < 0) {
-                fprintf(stderr, "Error: Could not write to %s: %s\n",
+                fprintf(stderr, "Error: could not write data block to %s: %s\n",
                         demux->pathname, strerror(errno));
                 break;
             }
@@ -144,7 +144,7 @@ ssize_t transfer(struct archive *a, demux_t *demux)
         };
 
         if (rv == ARCHIVE_RETRY) {
-            fprintf(stderr, "Warning (Retry): %s\n", archive_error_string(a));
+            fprintf(stderr, "Warning (Retry): while reading data block: %s\n", archive_error_string(a));
             continue;
         }
         if (rv == ARCHIVE_EOF) {
@@ -263,14 +263,14 @@ int main(int argc, char * const argv[])
 
         rv = archive_read_next_header(a, &entry);
         if (rv == ARCHIVE_FATAL) {
-            fprintf(stderr, "Error: %s\n", archive_error_string(a));
+            fprintf(stderr, "Error: while reading archive header: %s\n", archive_error_string(a));
             exit(1);
         }
         else if (rv == ARCHIVE_WARN) {
-            fprintf(stderr, "Warning: %s\n", archive_error_string(a));
+            fprintf(stderr, "Warning: while reading archive header: %s\n", archive_error_string(a));
         }
         else if (rv == ARCHIVE_RETRY) {
-            fprintf(stderr, "Warning (Retry): %s\n", archive_error_string(a));
+            fprintf(stderr, "Warning (Retry): while reading archive header: %s\n", archive_error_string(a));
             continue;
         }
         else if (rv == ARCHIVE_EOF) {

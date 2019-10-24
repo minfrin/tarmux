@@ -81,9 +81,11 @@ void version()
  * If the path does not contain a numeric suffix, the
  * length of the whole path is returned.
  */
-static int pathlen(const char *pathname)
+static int pathlen(const char *pathname, intmax_t *index)
 {
     const char *slider;
+
+    *index = 0;
 
     slider = strrchr(pathname, '.');
 
@@ -96,6 +98,10 @@ static int pathlen(const char *pathname)
         while (pathname[i]) {
             if (!isdigit(pathname[i])) {
                 valid = 0;
+            }
+            else {
+                (*index) *= 10;
+                (*index) += (pathname[i] - '0');
             }
             i++;
         }
@@ -260,6 +266,7 @@ int main(int argc, char * const argv[])
     }
 
     for (;;) {
+        intmax_t index;
 
         rv = archive_read_next_header(a, &entry);
         if (rv == ARCHIVE_FATAL) {
@@ -282,7 +289,13 @@ int main(int argc, char * const argv[])
         if (sdemux) {
             const char *pathname = archive_entry_pathname(entry);
             if (!sdemux->pathname) {
-                sdemux->pathname = strndup(pathname, pathlen(pathname));
+                sdemux->pathname = strndup(pathname, pathlen(pathname, &index));
+                if (index) {
+                    fprintf(stderr,
+                            "Error: First stream index is non-zero (%" PRIdMAX "), not at the start of the stream, aborting: %s\n",
+                            index, archive_entry_pathname(entry));
+                    exit(4);
+                }
                 total = transfer(a, sdemux);
                 if (total < 0) {
                     exit(1);
@@ -291,7 +304,7 @@ int main(int argc, char * const argv[])
                     break;
                 }
             }
-            else if (!strncmp(sdemux->pathname, pathname, pathlen(pathname))) {
+            else if (!strncmp(sdemux->pathname, pathname, pathlen(pathname, &index))) {
                 total = transfer(a, sdemux);
                 if (total < 0) {
                     exit(1);
@@ -315,7 +328,7 @@ int main(int argc, char * const argv[])
             for (i = 0; i < demux_count; i++) {
                 const char *pathname = archive_entry_pathname(entry);
 
-                if (!strncmp(demux[i].pathname, pathname, pathlen(pathname))) {
+                if (!strncmp(demux[i].pathname, pathname, pathlen(pathname, &index))) {
                     dm = &demux[i];
                     found = 1;
                     break;

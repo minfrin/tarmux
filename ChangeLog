@@ -1,6 +1,9 @@
 
 Changes with v1.0.2
 
+  *) Explicitly check that the first fragment is fragment zero,
+     and complain very loudly if it is not. [Graham Leggett]
+
   *) Tighten error handling in tardemux. [Graham Leggett]
 
 Changes with v1.0.1

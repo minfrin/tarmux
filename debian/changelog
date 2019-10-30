@@ -1,3 +1,8 @@
+tarmux (1.0.2) stable; urgency=low
+  
+  * Bugfix Release.
+
+ -- Graham Leggett <minfrin@sharp.fm>  Wed, 30 Oct 2019 00:00:00 +0000
 tarmux (1.0.1) stable; urgency=low
 
   * Bugfix Release.

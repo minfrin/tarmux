@@ -1,5 +1,9 @@
 
 AM_CFLAGS = ${libarchive_CFLAGS}
+ACLOCAL_AMFLAGS = "-Im4"
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
+libtool: $(LIBTOOL_DEPS)
+	$(SHELL) ./config.status libtool
 
 bin_PROGRAMS = tarmux tardemux
 tarmux_SOURCES = tarmux.c

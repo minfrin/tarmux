@@ -1,4 +1,8 @@
 
+Changes with v1.0.3
+
+  *) Update autoconf minimum to v2.69. [Graham Leggett]
+
 Changes with v1.0.2
 
   *) Explicitly check that the first fragment is fragment zero,

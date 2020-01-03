@@ -1,12 +1,14 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.61)
-AC_INIT(tarmux, 1.0.2, minfrin@sharp.fm)
+AC_PREREQ([2.69])
+AC_INIT([tarmux],[1.0.3],[minfrin@sharp.fm])
+AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([dist-bzip2])
-AC_CONFIG_FILES([Makefile tarmux.spec])
-AC_CONFIG_SRCDIR([tarmux.c])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SRCDIR([tarmux.c])
+AC_CONFIG_MACRO_DIR([m4])
+LT_INIT
 
 # Checks for programs.
 AC_PROG_CC
@@ -28,5 +30,7 @@ AC_CHECK_HEADERS([archive_write_set_format_raw])
 
 PKG_CHECK_MODULES(libarchive, libarchive >= 3.1)
 
+AC_CONFIG_FILES([Makefile tarmux.spec])
+AC_SUBST([LIBTOOL_DEPS])
 AC_OUTPUT
 

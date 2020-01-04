@@ -64,7 +64,7 @@ command lines to multiplex multiple streams into the same stream concurrently.
 mod_ical is available as RPMs through [COPR] as follows:
 
 ```
-dnf copr enable minfrin/mod_ical
+dnf copr enable minfrin/tarmux
 ```
 
 # about tarmux

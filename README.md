@@ -59,6 +59,14 @@ processing.
 Optional files and/or pipes can be specified on the tarmux and tardemux
 command lines to multiplex multiple streams into the same stream concurrently.
 
+# downloads
+
+mod_ical is available as RPMs through [COPR] as follows:
+
+```
+dnf copr enable minfrin/mod_ical
+```
+
 # about tarmux
 
 Tarmux is written for speed in portable C, and is tested on MacOSX, Redhat
@@ -70,3 +78,4 @@ Packaging is available for RPM and Debian/Ubuntu systems.
 Tarmux is written by Graham Leggett, and is licensed under the Apache
 Licence, Version 2.
 
+  [COPR]: <https://copr.fedorainfracloud.org/coprs/minfrin/tarmux/>

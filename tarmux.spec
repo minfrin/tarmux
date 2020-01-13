@@ -1,7 +1,7 @@
 # RPM Spec file for tarmux
 
 Name:      tarmux
-Version:   1.0.2
+Version:   1.0.3
 Release:   1%{?dist}
 Summary:   Multiplex / demultiplex streams
 License:   ASL 2.0

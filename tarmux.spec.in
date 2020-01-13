@@ -10,6 +10,8 @@ Source:    https://github.com/minfrin/%{name}/releases/download/%{name}-%{versio
 URL:	   https://github.com/minfrin/tarmux
 BuildRequires: libarchive-devel >= 3, help2man, gcc
 
+%define    __libtoolize /bin/true
+
 %description
 Multiplex and demultiplex streams using tar file fragments.
 

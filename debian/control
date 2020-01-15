@@ -1,8 +1,8 @@
 Source: tarmux
-Priority: extra
+Priority: optional
 Maintainer: Graham Leggett <minfrin@sharp.fm>
-Build-Depends: debhelper (>= 8.0.0), autotools-dev, libarchive-dev, pkg-config
-Standards-Version: 3.9.4
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, libarchive-dev, pkg-config, help2man
+Standards-Version: 4.1.4
 Section: utils
 Homepage: https://github.com/minfrin/tarmux
 
@@ -11,4 +11,5 @@ Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Multiplex and demultiplex streams using tar file fragments.
-
+ Allows large files to be multiplexed to and demultiplexed from a pipe
+ or a stream where the stream is too large to fit on disk.

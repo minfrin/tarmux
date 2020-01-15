@@ -1,4 +1,11 @@
 
+Changes with v1.0.4
+
+  *) Make help2man optional if manpages are already
+     generated. [Graham Leggett]
+
+  *) Update ubuntu packaging support. [Graham Leggett]
+
 Changes with v1.0.3
 
   *) Update autoconf minimum to v2.69. [Graham Leggett]

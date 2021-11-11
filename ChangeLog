@@ -1,4 +1,9 @@
 
+Changes with v1.0.5
+
+  *) Remove Group, depend on pkgconfig in spec file.
+     [Graham Leggett]
+
 Changes with v1.0.4
 
   *) Make help2man optional if manpages are already

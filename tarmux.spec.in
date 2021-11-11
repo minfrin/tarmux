@@ -34,7 +34,7 @@ rm -rf %{_builddir}/%{name}-%{version}/debian
 %license COPYING
 
 %changelog
-* Thu Nov 11 2021 Graham Leggett <minfrin@sharp.fm> - 1.0.2-1
+* Thu Nov 11 2021 Graham Leggett <minfrin@sharp.fm> - 1.0.5-1
 - Updates to packaging
 * Mon May 23 2016 Graham Leggett <minfrin@sharp.fm> - 1.0.1-1
 - Updates to packaging

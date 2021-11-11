@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([tarmux],[1.0.4],[minfrin@sharp.fm])
+AC_INIT([tarmux],[1.0.5],[minfrin@sharp.fm])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([dist-bzip2])
 AC_CONFIG_HEADERS([config.h])
